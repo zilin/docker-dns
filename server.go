@@ -11,6 +11,7 @@ import (
 
 var docker dockerclient.DockerClient
 var dockerBr = flag.String("i", "docker0", "docker bridge")
+var dockerSearchDomain = flag.String("d", "docker.local", "DNS search domain")
 
 func handleDnsRequest(w dns.ResponseWriter, r *dns.Msg) {
 	m := new(dns.Msg)
@@ -18,8 +19,8 @@ func handleDnsRequest(w dns.ResponseWriter, r *dns.Msg) {
 	records := make([]dns.RR, 0)
 	q := r.Question[0]
 
-	if q.Qtype == dns.TypeA && strings.HasSuffix(q.Name, ".docker.") {
-		docker, _ := dockerclient.NewDockerClient("unix:///var/run/docker.sock")
+	if q.Qtype == dns.TypeA && strings.HasSuffix(q.Name, "." + *dockerSearchDomain + ".") {
+		docker, _ := dockerclient.NewDockerClient("unix:///var/run/docker.sock", nil)
 		nameDomain := strings.Split(q.Name, ".")
 		containers, err := docker.ListContainers(false)
 		if err != nil {
